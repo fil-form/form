@@ -28,7 +28,7 @@ const parser = new XMLParser({
   },
 });
 
-export default function (xml: string | null) {
+export default function parse(xml: string | null) {
   if (!xml) return {} as Data;
   const data: Data = parser.parse(xml);
   if (!data["Register"]) {
