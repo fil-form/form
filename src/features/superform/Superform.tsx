@@ -28,7 +28,7 @@ function getXml(data: Data) {
   element.click();
 }
 
-export default function () {
+export default function Superform() {
   const [dataXML, setDataXML] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const handleFile = (t: ChangeEvent<HTMLInputElement>) => {
@@ -49,7 +49,7 @@ export default function () {
     if (data) {
       dispatch(applyXML(data));
     }
-  }, [data]);
+  }, [data, dispatch]);
 
   return (
     <Stack direction={"column"} spacing={2}>
