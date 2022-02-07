@@ -41,11 +41,12 @@ export function* makeCell<T>(
       </Grid>
     );
   } else if (Array.isArray(data)) {
+    const accName = p[p.length - 2]
     yield (
-      <Grid item xs={12} md={p.length > 1 && p.length < 4 ? 6 : 12}>
+      <Grid item xs={12} md={p.length > 1 && p.length < 4 && accName !== 'Supplies' ? 6 : 12}>
         <Accordion sx={{ padding: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            {p[p.length - 2]}
+            {accName}
           </AccordionSummary>
           <Grid container spacing={2}>
             {data.reduce(
@@ -62,11 +63,12 @@ export function* makeCell<T>(
       const [n, v] = Object.entries(data)[0];
       yield* makeCell(v, p, n);
     } else {
+      const accName = name || p[p.length - 1]
       yield (
-        <Grid item xs={12} md={p.length > 1 && p.length < 4 ? 6 : 12}>
+        <Grid item xs={12} md={p.length > 1 && p.length < 7  ? 6 : 12}>
           <Accordion sx={{ padding: 2 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              {name || p[p.length - 1]}
+              {accName}
             </AccordionSummary>
             <Grid container spacing={2}>
               {Object.entries(data).reduce((a, b, i) => {
