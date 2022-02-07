@@ -12,7 +12,6 @@ interface FieldProps<T> {
 
 function Field<T>({ name, data, p }: FieldProps<T>) {
   const dispatch = useAppDispatch();
-  console.log(`name ${name} path ${p}`)
   return (
     <TextField
       label={name}
