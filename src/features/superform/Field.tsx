@@ -12,6 +12,7 @@ interface FieldProps<T> {
 
 function Field<T>({ name, data, p }: FieldProps<T>) {
   const dispatch = useAppDispatch();
+  console.log(`name ${name} path ${p}`)
   return (
     <TextField
       label={name}
@@ -35,13 +36,13 @@ export function* makeCell<T>(
   if (typeof data == "string" || typeof data == "number") {
     // console.log(p.toString());
     yield (
-      <Grid item xs={4}>
+      <Grid item xs={12} sm={p.length < 4 ? 6: 12} md={p.length < 4 ? 4: 12} lg={p.length < 4 ? 3: 6} >
         <Field name={name || ""} data={data} p={p} />
       </Grid>
     );
   } else if (Array.isArray(data)) {
     yield (
-      <Grid item xs={12}>
+      <Grid item xs={12} md={p.length > 1 && p.length < 4 ? 6 : 12}>
         <Accordion sx={{ padding: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             {p[p.length - 2]}
@@ -62,7 +63,7 @@ export function* makeCell<T>(
       yield* makeCell(v, p, n);
     } else {
       yield (
-        <Grid item xs={12}>
+        <Grid item xs={12} md={p.length > 1 && p.length < 4 ? 6 : 12}>
           <Accordion sx={{ padding: 2 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               {name || p[p.length - 1]}
