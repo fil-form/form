@@ -3,7 +3,12 @@ const { XMLParser } = require("fast-xml-parser");
 const { JSONPath } = require("jsonpath-plus");
 const pointer = require("json-pointer");
 
-const lists = ["Supplies.Supply", "Supplies.Supply.Documents.Document"];
+const lists = [
+  "Register.Supplies.Supply",
+  "Register.Supplies.Supply.Documents.Document",
+  "TransferRegisterXml.Supplies.Supply.Documents.Document",
+  "TransferRegisterXml.Supplies.Supply.Documents.Document",
+];
 
 const parser = new XMLParser({
   ignoreAttributes: true,
