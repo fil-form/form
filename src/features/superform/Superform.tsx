@@ -1,5 +1,5 @@
-import { Button, Stack, styled } from "@mui/material";
-import { applyXML, Data } from "./formSlicer";
+import { Button, Stack, styled,  TextField} from "@mui/material";
+import { applyXML, Data, perc } from "./formSlicer";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import parse from "./parse";
@@ -77,6 +77,7 @@ export default function Superform() {
     }
   }, [data, dispatch]);
 
+
   return (
     <Stack direction={"column"} spacing={1.5}>
       <Stack direction={"row"} spacing={1.5}>
@@ -92,6 +93,12 @@ export default function Superform() {
           </Button>
         </label>
         <GetXml name={name || "res.xml"} />
+        <TextField
+          fullWidth
+          label={"Процент от CessionAmount"}
+          onChange={t=> {
+          dispatch(perc(Number.parseFloat(t.target.value)));
+        }} defaultValue={1}></TextField>
       </Stack>
       {Array.from(makeCell(data))}
     </Stack>

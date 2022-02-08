@@ -29,6 +29,7 @@ export const schema = [
   "$.Register.ProcessTemplateCode",
   "$.Register.RegisterStartDate",
   "$.Register.RegisterEndDate",
+  "$.Register.ExtraInfo",
   "$.Register.Supplies.Supply[*].SupplyNumber",
   "$.Register.Supplies.Supply[*].AdditionalSupplyNumber",
   "$.Register.Supplies.Supply[*].CessionNumber",
@@ -65,7 +66,6 @@ export const schema = [
   "$.Register.Supplies.Supply[*].Documents.Document[*].DocAmount",
   "$.Register.Supplies.Supply[*].Documents.Document[*].DocVat",
   "$.Register.Supplies.Supply[*].Documents.Document[*].DocAmountWithVat",
-  "$.Register.ExtraInfo",
 ];
 
 export const extraFields = [
