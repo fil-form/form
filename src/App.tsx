@@ -8,7 +8,7 @@ function App() {
     <div className="App">
       <Box
         // maxWidth={1200}
-        margin={5}
+        margin={2}
       >
         <Superform />
       </Box>
