@@ -3,12 +3,7 @@ const { XMLParser } = require("fast-xml-parser");
 const { JSONPath } = require("jsonpath-plus");
 const pointer = require("json-pointer");
 
-const lists = [
-  "TransferRegisterXml.Supplies.Supply",
-  "TransferRegisterXml.Supplies.Supply.Documents.Document",
-  "Register.Supplies.Supply",
-  "Register.Supplies.Supply.Documents.Document",
-];
+const lists = ["Supplies.Supply", "Supplies.Supply.Documents.Document"];
 
 const parser = new XMLParser({
   ignoreAttributes: true,
@@ -22,51 +17,103 @@ const parser = new XMLParser({
   },
 });
 
-export default function parse(xml: string | null) {
-  if (!xml) return {} as Data;
-  const data: Data = parser.parse(xml);
-  if (!data["Register"]) {
-    data["Register"] = data["TransferRegisterXml"];
-    delete data["TransferRegisterXml"];
-  }
-  delete data["?xml"];
+const toMove = ["Buyer", "Factor", "Provider"];
 
-  // move Provider
+export const schema = [
+  "$.Register.RegisterTemplateCode",
+  "$.Register.ProcessTemplateCode",
+  "$.Register.RegisterStartDate",
+  "$.Register.RegisterEndDate",
+  "$.Register.Supplies.Supply[*].SupplyNumber",
+  "$.Register.Supplies.Supply[*].AdditionalSupplyNumber",
+  "$.Register.Supplies.Supply[*].CessionNumber",
+  "$.Register.Supplies.Supply[*].FundingRequestNumber",
+  "$.Register.Supplies.Supply[*].Amount",
+  "$.Register.Supplies.Supply[*].Vat",
+  "$.Register.Supplies.Supply[*].AmountWithVat",
+  "$.Register.Supplies.Supply[*].CessionAmount",
+  "$.Register.Supplies.Supply[*].FundingRequestAmount",
+  "$.Register.Supplies.Supply[*].FundingFirstAmount",
+  "$.Register.Supplies.Supply[*].FundingRequestDate",
+  "$.Register.Supplies.Supply[*].FundingFirstDate",
+  "$.Register.Supplies.Supply[*].Buyer.Code",
+  "$.Register.Supplies.Supply[*].Buyer.INN",
+  "$.Register.Supplies.Supply[*].Buyer.KPP",
+  "$.Register.Supplies.Supply[*].Buyer.Name",
+  "$.Register.Supplies.Supply[*].Provider.Code",
+  "$.Register.Supplies.Supply[*].Provider.Name",
+  "$.Register.Supplies.Supply[*].Provider.INN",
+  "$.Register.Supplies.Supply[*].Provider.KPP",
+  "$.Register.Supplies.Supply[*].Factor.Code",
+  "$.Register.Supplies.Supply[*].Factor.Name",
+  "$.Register.Supplies.Supply[*].Factor.INN",
+  "$.Register.Supplies.Supply[*].Factor.KPP",
+  "$.Register.Supplies.Supply[*].SupplyAgreement.Code",
+  "$.Register.Supplies.Supply[*].SupplyAgreement.Number",
+  "$.Register.Supplies.Supply[*].SupplyAgreement.Date",
+  "$.Register.Supplies.Supply[*].FactoringAgreement.Code",
+  "$.Register.Supplies.Supply[*].FactoringAgreement.Number",
+  "$.Register.Supplies.Supply[*].FactoringAgreement.Date",
+  "$.Register.Supplies.Supply[*].Documents.Document[*].Code",
+  "$.Register.Supplies.Supply[*].Documents.Document[*].Date",
+  "$.Register.Supplies.Supply[*].Documents.Document[*].Number",
+  "$.Register.Supplies.Supply[*].Documents.Document[*].DocAmount",
+  "$.Register.Supplies.Supply[*].Documents.Document[*].DocVat",
+  "$.Register.Supplies.Supply[*].Documents.Document[*].DocAmountWithVat",
+  "$.Register.ExtraInfo",
+];
+
+export const extraFields = [
+  {
+    p: "$.Register.Supplies.Supply[*]",
+    fields: [
+      // "SupplyNumber",
+      "FundingRequestNumber",
+      "FundingRequestAmount",
+      "FundingFirstAmount",
+      "FundingRequestDate",
+      "FundingFirstDat",
+    ],
+  },
+  {
+    p: "$.Register",
+    fields: [
+      ["RegisterTemplateCode", "ReesterFundedSupply"],
+      ["ProcessTemplateCode", "FundedCessionsProcess"],
+    ],
+  },
+];
+
+export const renameValues = [
+  {
+    p: "$.Register.Supplies.Supply[*].Number",
+    to: "SupplyNumber",
+  },
+];
+
+const supplyRequired = [
+  "FundingRequestNumber",
+  "FundingRequestAmount",
+  "FundingFirstAmount",
+  "FundingRequestDate",
+  "FundingFirstDat",
+  // "SupplyNumber",
+].join(",");
+
+function moveToSupply<T>(data: T) {
+  const pt = pointer(data);
   JSONPath({
-    path: "$.Register.Supplies.Supply[0].Provider",
+    path: "$.Register.Supplies.Supply[*]",
     json: data,
-    callback: (e: any, b: any, c: any) => {
-      // @ts-ignore
-      data["Register"]["Provider"] = c.value;
-      delete c.parent[c.parentProperty];
+    callback: (ee: any, b: any, c: any) => {
+      const po = JSONPath.toPointer(JSONPath.toPathArray(c.path));
+      toMove.forEach((move) => {
+        if (pt.has(`/Register/${move}`) && !pt.has(`${po}/${move}`)) {
+          pt.set(`${po}/${move}`, pt.get(`/Register/${move}`));
+        }
+      });
     },
   });
-
-  // move SupplyAgreement
-  JSONPath({
-    path: "$.Register.Supplies.Supply[0].SupplyAgreement",
-    json: data,
-    callback: (e: any, b: any, c: any) => {
-      // @ts-ignore
-      data["Register"]["SupplyAgreement"] = c.value;
-      delete c.parent[c.parentProperty];
-    },
-  });
-
-  // add Supply fields
-  JSONPath({
-    path: "$.Register.Supplies.Supply[0].SupplyAgreement",
-    json: data,
-    callback: (e: any, b: any, c: any) => {
-      // @ts-ignore
-      data["Register"]["SupplyAgreement"] = c.value;
-      delete c.parent[c.parentProperty];
-    },
-  });
-
-  addExtraFields(data);
-
-  return fitToSchema(data);
 }
 
 function addExtraFields<T>(data: T) {
@@ -77,10 +124,11 @@ function addExtraFields<T>(data: T) {
       json: data,
       callback: (ee: any, b: any, c: any) => {
         const po = JSONPath.toPointer(JSONPath.toPathArray(c.path));
-        e.fields.forEach((field) => {
-          const pp = `${po}/${field}`;
+        e.fields.forEach((field: string | string[]) => {
+          const [f, v] = typeof field == "string" ? [field, ""] : field;
+          const pp = `${po}/${f}`;
           if (!pt.has(pp)) {
-            pt.set(pp, "");
+            pt.set(pp, v);
           }
         });
       },
@@ -107,76 +155,47 @@ function fitToSchema<T>(data: T) {
   return newData;
 }
 
-export const remap = [
-  {
-    to: "$.Registry.Supplies.Supply[0]",
-    prepend: {
-      FundingRequestNumber: "",
-      FundingRequestAmount: "",
-      FundingFirstAmount: "",
-      FundingRequestDate: "",
-      FundingFirstDat: "",
+export function findEmpty<T>(data: T) {
+  const empty = new Set<string>();
+  JSONPath({
+    path: `$..Supplies.Supply[*][${supplyRequired}]`,
+    json: data,
+    callback: (e: any, b: any, c: any) => {
+      if (c.value === "") {
+        empty.add(JSONPath.toPointer(JSONPath.toPathArray(c.path)));
+      }
     },
-  },
-  {
-    from: "$.Registry.Supplies.Supply[0].Provider",
-    to: "$.Registry",
-  },
-];
+  });
+  return empty;
+}
 
-export const schema = [
-  "$.Register.RegisterTemplateCode",
-  "$.Register.ProcessTemplateCode",
-  "$.Register.RegisterStartDate",
-  "$.Register.RegisterEndDate",
-  "$.Register.Buyer.Code",
-  "$.Register.Buyer.INN",
-  "$.Register.Buyer.KPP",
-  "$.Register.Buyer.Name",
-  "$.Register.Provider.Code",
-  "$.Register.Provider.Name",
-  "$.Register.Provider.INN",
-  "$.Register.Provider.KPP",
-  "$.Register.Factor.Code",
-  "$.Register.Factor.Name",
-  "$.Register.Factor.INN",
-  "$.Register.Factor.KPP",
-  "$.Register.SupplyAgreement.Code",
-  "$.Register.SupplyAgreement.Number",
-  "$.Register.SupplyAgreement.Date",
-  "$.Register.FactoringAgreement.Code",
-  "$.Register.FactoringAgreement.Number",
-  "$.Register.FactoringAgreement.Date",
-  "$.Register.Supplies.Supply[*].SupplyNumber",
-  "$.Register.Supplies.Supply[*].AdditionalSupplyNumber",
-  "$.Register.Supplies.Supply[*].CessionNumber",
-  "$.Register.Supplies.Supply[*].FundingRequestNumber",
-  "$.Register.Supplies.Supply[*].Amount",
-  "$.Register.Supplies.Supply[*].Vat",
-  "$.Register.Supplies.Supply[*].AmountWithVat",
-  "$.Register.Supplies.Supply[*].CessionAmount",
-  "$.Register.Supplies.Supply[*].FundingRequestAmount",
-  "$.Register.Supplies.Supply[*].FundingFirstAmount",
-  "$.Register.Supplies.Supply[*].FundingRequestDate",
-  "$.Register.Supplies.Supply[*].FundingFirstDate",
-  "$.Register.Supplies.Supply[*].Documents.Document[*].Code",
-  "$.Register.Supplies.Supply[*].Documents.Document[*].Date",
-  "$.Register.Supplies.Supply[*].Documents.Document[*].Number",
-  "$.Register.Supplies.Supply[*].Documents.Document[*].DocAmount",
-  "$.Register.Supplies.Supply[*].Documents.Document[*].DocVat",
-  "$.Register.Supplies.Supply[*].Documents.Document[*].DocAmountWithVat",
-  "$.Register.ExtraInfo",
-];
+export function rename<T>(data: T) {
+  renameValues.forEach(({ p, to }) => {
+    JSONPath({
+      path: p,
+      json: data,
+      callback: (e: any, b: any, c: any) => {
+        console.log(c);
+        if (!c.parent[to]) {
+          c.parent[to] = c.value;
+          delete c.parent[c.parentProperty];
+        }
+      },
+    });
+  });
+}
 
-export const extraFields = [
-  {
-    p: "$.Register.Supplies.Supply[*]",
-    fields: [
-      "FundingRequestNumber",
-      "FundingRequestAmount",
-      "FundingFirstAmount",
-      "FundingRequestDate",
-      "FundingFirstDat",
-    ],
-  },
-];
+export default function parse(xml: string | null) {
+  if (!xml) return {} as Data;
+  const data: Data = parser.parse(xml);
+  if (!data["Register"]) {
+    data["Register"] = data["TransferRegisterXml"];
+    delete data["TransferRegisterXml"];
+  }
+  delete data["?xml"];
+
+  // rename(data);
+  addExtraFields(data);
+  moveToSupply(data);
+  return fitToSchema(data);
+}

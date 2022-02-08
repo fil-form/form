@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { findEmpty } from "./parse";
 const { JSONPath } = require("jsonpath-plus");
 
 export type pathType = (string | number)[];
@@ -11,28 +12,6 @@ const initialState: Data = {};
 type Errors = {
   [key: string]: string;
 };
-
-const supplyRequired = [
-  "FundingRequestNumber",
-  "FundingRequestAmount",
-  "FundingFirstAmount",
-  "FundingRequestDate",
-  "FundingFirstDat",
-].join(",");
-
-function findEmpty<T>(data: T) {
-  const empty = new Set<string>();
-  JSONPath({
-    path: `$..Supplies.Supply[*][${supplyRequired}]`,
-    json: data,
-    callback: (e: any, b: any, c: any) => {
-      if (c.value === "") {
-        empty.add(JSONPath.toPointer(JSONPath.toPathArray(c.path)));
-      }
-    },
-  });
-  return empty;
-}
 
 export const formSlice = createSlice({
   name: "form",
