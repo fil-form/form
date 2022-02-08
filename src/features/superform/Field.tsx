@@ -16,7 +16,13 @@ function Field<T>({ name, data, p }: FieldProps<T>) {
   const dispatch = useAppDispatch();
   const pp = (["$"] as pathType).concat(p);
   const po = JSONPath.toPointer(pp);
-  const value = useAppSelector((state) => pointer(state.form.data).get(po));
+  const value = useAppSelector((state) => {
+    const pt = pointer(state.form.data);
+    if (pt.has(po)) {
+      return pointer(state.form.data).get(po);
+    } else return "";
+  });
+
   const isEmpty = useAppSelector((state) => state.form.empty.indexOf(po) >= 0);
   return (
     <TextField
