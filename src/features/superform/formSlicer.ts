@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { findEmpty } from "./parse";
 const { JSONPath } = require("jsonpath-plus");
-const pointer = require("json-pointer");
+// const pointer = require("json-pointer");
 
 export type pathType = (string | number)[];
 
