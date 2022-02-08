@@ -47,8 +47,6 @@ export const formSlice = createSlice({
       state,
       action: PayloadAction<{ p: pathType; v: string | number }>
     ) => {
-      const empty = new Set(state.empty) as Set<string>;
-
       JSONPath({
         path: action.payload.p,
         json: state.data,
