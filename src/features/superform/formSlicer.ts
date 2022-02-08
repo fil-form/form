@@ -14,10 +14,6 @@ type Errors = {
   [key: string]: string;
 };
 
-const percentOfCession = [
-  'FundingRequestAmount',
-  'FundingFirstAmount'
-]
 
 export const formSlice = createSlice({
   name: "form",
@@ -60,7 +56,6 @@ export default formSlice.reducer;
 
 
 function changePerc<T>(data: T, perc: number) {
-  const pt = pointer(data);
   JSONPath({
     path: `$..Supplies.Supply[*][FundingRequestAmount,FundingFirstAmount]`,
     json: data,
