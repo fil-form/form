@@ -22,7 +22,7 @@ const parser = new XMLParser({
   },
 });
 
-const toMove = ["Buyer", "Factor", "Provider"];
+const toMove = ["Buyer", "Factor", "Provider", "SupplyAgreement", "FactoringAgreement"];
 
 export const schema = [
   "$.Register.RegisterTemplateCode",
@@ -77,7 +77,7 @@ export const extraFields = [
       "FundingRequestAmount",
       "FundingFirstAmount",
       "FundingRequestDate",
-      "FundingFirstDat",
+      "FundingFirstDate",
     ],
   },
   {
@@ -101,7 +101,7 @@ const supplyRequired = [
   "FundingRequestAmount",
   "FundingFirstAmount",
   "FundingRequestDate",
-  "FundingFirstDat",
+  "FundingFirstDate",
   // "SupplyNumber",
 ].join(",");
 
