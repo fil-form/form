@@ -87,12 +87,11 @@ export default function Superform() {
             onChange={handleFile}
             accept={".xml"}
           />
-
           <Button variant="contained" component="span">
             Загрузить XML
           </Button>
-          <GetXml name={name || "res.xml"} />
         </label>
+        <GetXml name={name || "res.xml"} />
       </Stack>
       {Array.from(makeCell(data))}
     </Stack>
