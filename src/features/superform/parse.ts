@@ -1,7 +1,7 @@
 import { Data } from "./formSlicer";
 const { XMLParser } = require("fast-xml-parser");
 const { JSONPath } = require("jsonpath-plus");
-var pointer = require("json-pointer");
+const pointer = require("json-pointer");
 
 const lists = [
   "TransferRegisterXml.Supplies.Supply",
@@ -65,11 +65,8 @@ export default function parse(xml: string | null) {
   });
 
   addExtraFields(data);
-  // fit to schema
-  const dataFitted = fitToSchema(data);
-  console.log({ dataFitted });
 
-  return dataFitted;
+  return fitToSchema(data);
 }
 
 function addExtraFields<T>(data: T) {

@@ -4,6 +4,7 @@ import { Accordion, AccordionSummary, Grid, TextField } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import React from "react";
 const { JSONPath } = require("jsonpath-plus");
+const pointer = require("json-pointer");
 
 interface FieldProps<T> {
   name: string;
@@ -14,13 +15,13 @@ interface FieldProps<T> {
 function Field<T>({ name, data, p }: FieldProps<T>) {
   const dispatch = useAppDispatch();
   const pp = (["$"] as pathType).concat(p);
-  const isEmpty = useAppSelector(
-    (state) => state.form.empty.indexOf(JSONPath.toPointer(pp)) >= 0
-  );
+  const po = JSONPath.toPointer(pp);
+  const value = useAppSelector((state) => pointer(state.form.data).get(po));
+  const isEmpty = useAppSelector((state) => state.form.empty.indexOf(po) >= 0);
   return (
     <TextField
       label={name}
-      defaultValue={data}
+      value={value}
       fullWidth
       onChange={(t) => {
         dispatch(changeValue({ p: pp, v: t.target.value }));
