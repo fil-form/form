@@ -12,17 +12,18 @@ const lists = [
 
 const parser = new XMLParser({
   ignoreAttributes: true,
-  isArray: (
-    name: string,
-    jpath: string,
-    isLeafNode: boolean,
-    isAttribute: boolean
-  ) => {
+  isArray: (name: string, jpath: string) => {
     return lists.indexOf(jpath) !== -1;
   },
 });
 
-const toMove = ["Buyer", "Factor", "Provider", "SupplyAgreement", "FactoringAgreement"];
+const toMove = [
+  "Buyer",
+  "Factor",
+  "Provider",
+  "SupplyAgreement",
+  "FactoringAgreement",
+];
 
 export const schema = [
   "$.Register.RegisterTemplateCode",
@@ -31,6 +32,7 @@ export const schema = [
   "$.Register.RegisterEndDate",
   "$.Register.ExtraInfo",
   "$.Register.Supplies.Supply[*].SupplyNumber",
+  // "$.Register.Supplies.Supply[*].Number",
   "$.Register.Supplies.Supply[*].AdditionalSupplyNumber",
   "$.Register.Supplies.Supply[*].CessionNumber",
   "$.Register.Supplies.Supply[*].FundingRequestNumber",
@@ -66,6 +68,12 @@ export const schema = [
   "$.Register.Supplies.Supply[*].Documents.Document[*].DocAmount",
   "$.Register.Supplies.Supply[*].Documents.Document[*].DocVat",
   "$.Register.Supplies.Supply[*].Documents.Document[*].DocAmountWithVat",
+];
+
+export const validateFields = [
+  "$.Register.Supplies.Supply[*].Documents.Document[?(@.Code==='consignment')].Number",
+  "$.Register.Supplies.Supply[*].SupplyNumber",
+  "$.Register.Supplies.Supply[*].CessionAmount",
 ];
 
 export const extraFields = [
@@ -180,7 +188,7 @@ export function rename<T>(data: T) {
       path: p,
       json: data,
       callback: (e: any, b: any, c: any) => {
-        console.log(c);
+        // console.log(c);
         if (!c.parent[to]) {
           c.parent[to] = c.value;
           delete c.parent[c.parentProperty];
@@ -188,6 +196,42 @@ export function rename<T>(data: T) {
       },
     });
   });
+}
+
+const hasSupply = ["SupplyNumber", "CessionAmount"];
+
+export function preValidate<T>(data: T) {
+  const errors = [] as string[];
+  JSONPath({
+    path: "$.Register.Supplies.Supply[*]",
+    json: data,
+    callback: (e: any, b: any, c: any) => {
+      hasSupply.forEach((v) => {
+        const po = JSONPath.toPointer(JSONPath.toPathArray(c.path));
+        if (Object.keys(c.value).indexOf(v) === -1) errors.push(`${po}/${v}`);
+        if (findNumber(c.value).length === 0) {
+          errors.push(`${po}/Documents/Document/Number`);
+        }
+      });
+    },
+  });
+  if (errors.length > 0) {
+    return window.confirm(
+      `В указанном файле нет необходимых полей:\n${errors.join(
+        "\n"
+      )}\nПродолжить?`
+    );
+  } else return true;
+}
+
+export function findNumber<T>(data: T): string {
+  // console.log({ data });
+  return (
+    JSONPath({
+      path: "$.Documents.Document[?(@.Code==='consignment')].Number",
+      json: data,
+    })[0].toString() || ""
+  );
 }
 
 export default function parse(xml: string | null) {
@@ -202,5 +246,9 @@ export default function parse(xml: string | null) {
   // rename(data);
   addExtraFields(data);
   moveToSupply(data);
-  return fitToSchema(data);
+  const ret = fitToSchema(data);
+  if (!preValidate(ret)) {
+    return {};
+  }
+  return ret;
 }

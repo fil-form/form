@@ -1,9 +1,15 @@
-import { Button, Stack, styled,  TextField} from "@mui/material";
-import { applyXML, Data, perc } from "./formSlicer";
+import { Button, Grid, Stack, styled } from "@mui/material";
+import { applyXML, Data } from "./formSlicer";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import parse from "./parse";
 import { makeCell } from "./Field";
+import {
+  HeaderItem,
+  SyncField,
+  SyncPercent,
+  SyncRequestNumber,
+} from "./SyncField";
 
 const { XMLBuilder } = require("fast-xml-parser");
 const builder = new XMLBuilder({
@@ -45,16 +51,20 @@ function GetXml(p: { name: string }) {
     <Button
       variant="contained"
       onClick={() => getXml(data, "out-" + p.name || "res.xml", empty)}
+      fullWidth
+      sx={{ height: 55 }}
     >
       Результат
     </Button>
   );
 }
 
-export default function Superform() {
+export default function Form() {
   const [[name, dataXML], setDataXML] = useState<
     [string, string] | [null, null]
   >([null, null]);
+
+  const [data, setData] = useState({} as Data);
   const dispatch = useAppDispatch();
 
   const handleFile = (t: ChangeEvent<HTMLInputElement>) => {
@@ -69,37 +79,46 @@ export default function Superform() {
     }
   };
 
-  const data = parse(dataXML);
-
   useEffect(() => {
     if (data) {
       dispatch(applyXML(data));
     }
   }, [data, dispatch]);
 
+  useEffect(() => {
+    const ret = parse(dataXML);
+    setData(ret);
+  }, [dispatch, dataXML]);
 
   return (
     <Stack direction={"column"} spacing={1.5}>
-      <Stack direction={"row"} spacing={1.5}>
-        <label htmlFor="contained-button-file">
-          <Input
-            id="contained-button-file"
-            type="file"
-            onChange={handleFile}
-            accept={".xml"}
-          />
-          <Button variant="contained" component="span">
-            Загрузить XML
-          </Button>
-        </label>
-        <GetXml name={name || "res.xml"} />
-        <TextField
-          fullWidth
-          label={"Процент от CessionAmount"}
-          onChange={t=> {
-          dispatch(perc(Number.parseFloat(t.target.value)));
-        }} defaultValue={1}></TextField>
-      </Stack>
+      <Grid container spacing={1.5}>
+        <HeaderItem>
+          <label htmlFor="contained-button-file">
+            <Input
+              id="contained-button-file"
+              type="file"
+              onChange={handleFile}
+              accept={".xml"}
+            />
+            <Button
+              variant="contained"
+              component="span"
+              fullWidth
+              sx={{ height: 55 }}
+            >
+              Загрузить XML
+            </Button>
+          </label>
+        </HeaderItem>
+        <HeaderItem>
+          <GetXml name={name || "res.xml"} />
+        </HeaderItem>
+        <SyncPercent />
+        <SyncField p={"$.Register.Supplies.Supply[*].FundingRequestDate"} />
+        <SyncField p={"$.Register.Supplies.Supply[*].FundingFirstDate"} />
+        <SyncRequestNumber />
+      </Grid>
       {Array.from(makeCell(data))}
     </Stack>
   );

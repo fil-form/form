@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import Superform from "./features/superform/Superform";
+import Form from "./features/superform/Form";
 import { Box } from "@mui/material";
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
         // maxWidth={1200}
         margin={2}
       >
-        <Superform />
+        <Form />
       </Box>
     </div>
   );

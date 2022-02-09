@@ -12,7 +12,7 @@ interface FieldProps<T> {
   p: pathType;
 }
 
-function Field<T>({ name, data, p }: FieldProps<T>) {
+function Field<T>({ name, p }: FieldProps<T>) {
   const dispatch = useAppDispatch();
   const pp = (["$"] as pathType).concat(p);
   const po = JSONPath.toPointer(pp);
@@ -46,7 +46,6 @@ export function* makeCell<T>(
   const p = name ? (path || []).concat([name]) : path || [];
 
   if (typeof data == "string" || typeof data == "number") {
-    // console.log(p.toString());
     yield (
       <Grid
         item
@@ -100,9 +99,8 @@ export function* makeCell<T>(
               {accName}
             </AccordionSummary>
             <Grid container spacing={1}>
-              {Object.entries(data).reduce((a, b, i) => {
+              {Object.entries(data).reduce((a, b) => {
                 const [n, v] = b;
-                // console.log(`make ${n} with path ${p}`);
                 const next = Array.from(makeCell(v, p, n));
                 // @ts-ignore
                 return a.concat(next);
